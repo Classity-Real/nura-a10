@@ -11,6 +11,12 @@ jobs:
     container:
       image: alpine:edge
       options: --privileged
+    env:
+      # GitHub Actions overrides HOME to /github/home inside containers,
+      # which doesn't match where we pre-stage pmaports or where our
+      # earlier local testing assumed things lived. Force it to /root
+      # so pmbootstrap's own path resolution and our pre-staging agree.
+      HOME: /root
 
     steps:
       - uses: actions/checkout@v4
