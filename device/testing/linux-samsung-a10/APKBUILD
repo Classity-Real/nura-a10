@@ -3,7 +3,7 @@
 maintainer="Classity-Real <classity-real@users.noreply.github.com>"
 pkgname=linux-samsung-a10
 pkgver=6.15_rc1
-pkgrel=0
+pkgrel=1
 pkgdesc="Mainline-based kernel for Samsung Galaxy A10 (Exynos 7884B/7885)"
 arch="aarch64"
 _carch="arm64"
@@ -35,39 +35,42 @@ _config="config-postmarketos-$_flavor.aarch64"
 
 source="
 $_repo-$_commit.tar.gz::https://github.com/$_owner/$_repo/archive/$_commit.tar.gz
-$_config
+$_config::https://raw.githubusercontent.com/Classity-Real/nura-a10/1fc396263691d38c0c19dc6d8643149684e7410f/device/testing/linux-samsung-a10/config-postmarketos-samsung-a10.aarch64
 "
 builddir="$srcdir/$_repo-$_commit"
 
 prepare() {
-default_prepare
-cp "$srcdir/$_config" .config
-make ARCH="$_carch" LLVM=1 olddefconfig
+	default_prepare
+	cp "$srcdir/$_config" .config
+	# Fix modpost ERROR: "wcslen" [fs/smb/client/cifs.ko] undefined
+	# by enabling the missing UNICODE support that CIFS expects
+	sed -i 's/# CONFIG_UNICODE is not set/CONFIG_UNICODE=y/' .config
+	make ARCH="$_carch" LLVM=1 olddefconfig
 }
 
 build() {
-unset LDFLAGS
-make ARCH="$_carch" LLVM=1 HOSTLDFLAGS="-fuse-ld=lld" \
-KBUILD_BUILD_VERSION="$((pkgrel + 1))-postmarketOS"
+	unset LDFLAGS
+	make ARCH="$_carch" LLVM=1 HOSTLDFLAGS="-fuse-ld=lld" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1))-postmarketOS"
 }
 
 package() {
-mkdir -p "$pkgdir"/boot
+	mkdir -p "$pkgdir"/boot
 
-make install dtbs_install modules_install \
-ARCH="$_carch" \
-LLVM=1 \
-INSTALL_PATH="$pkgdir"/boot \
-INSTALL_MOD_PATH="$pkgdir"/usr \
-INSTALL_MOD_STRIP=1 \
-INSTALL_DTBS_PATH="$pkgdir"/boot/dtbs
-rm -f "$pkgdir"/usr/lib/modules/*/build "$pkgdir"/usr/lib/modules/*/source
+	make install dtbs_install modules_install \
+		ARCH="$_carch" \
+		LLVM=1 \
+		INSTALL_PATH="$pkgdir"/boot \
+		INSTALL_MOD_PATH="$pkgdir"/usr \
+		INSTALL_MOD_STRIP=1 \
+		INSTALL_DTBS_PATH="$pkgdir"/boot/dtbs
+	rm -f "$pkgdir"/usr/lib/modules/*/build "$pkgdir"/usr/lib/modules/*/source
 
-install -D "$builddir"/include/config/kernel.release \
-"$pkgdir"/usr/share/kernel/"$_flavor"/kernel.release
+	install -D "$builddir"/include/config/kernel.release \
+		"$pkgdir"/usr/share/kernel/"$_flavor"/kernel.release
 
-install -Dm644 "$builddir"/arch/"$_carch"/boot/Image \
-"$pkgdir"/boot/vmlinuz
+	install -Dm644 "$builddir"/arch/"$_carch"/boot/Image \
+		"$pkgdir"/boot/vmlinuz
 }
 
 sha512sums="
