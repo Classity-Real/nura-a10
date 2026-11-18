@@ -1,5 +1,5 @@
 # Reference: <https://nura.eco/devicepkg>
-maintainer=""
+maintainer="Classity-Real <classity-real@users.noreply.github.com>"
 pkgname=device-samsung-a10
 pkgver=1
 pkgrel=0
@@ -9,7 +9,7 @@ arch="aarch64"
 license="MIT"
 depends="
 	android-tools-mkbootimg
-	linux-CHANGEME
+	linux-samsung-a10
 	postmarketos-base
 	"
 makedepends="devicepkg-dev"
@@ -27,4 +27,4 @@ package() {
 	devicepkg_package $startdir $pkgname
 }
 
-sha512sums="(run 'pmbootstrap checksum device-samsung-a10' to fill)"
+sha512sums="SKIP"

@@ -1,6 +1,6 @@
 # Kernel for Samsung Galaxy A10 (samsung-a10), based on the
 # exynos7885-mainline fork at github.com/Classity-Real/linux-a10-mainline
-maintainer="Classity-Real"
+maintainer="Classity-Real <classity-real@users.noreply.github.com>"
 pkgname=linux-samsung-a10
 pkgver=6.15_rc1
 pkgrel=0

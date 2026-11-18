@@ -38,13 +38,34 @@ jobs:
 
       - name: Run pmbootstrap init with pre-staged device
         run: |
-          # Known prompt order, confirmed by hand earlier in development:
-          #   pmaports branch -> vendor -> device codename -> username ->
-          #   audio backend -> wifi backend -> usb-moded profile ->
-          #   change additional options? (y/n)
-          # Since device-samsung-a10 already exists on disk now, the
-          # "start a new device port" sub-wizard should NOT trigger.
-          printf 'edge\nsamsung\na10\nuser\n\n\n\nn\n' | pmbootstrap --as-root init
+          # Built as a bash array, one element per prompt in exact order,
+          # captured from a real local `pmbootstrap --as-root init` run
+          # with device-samsung-a10 already present (so it shows up
+          # directly, no "new device port" sub-wizard triggers).
+          # "" = accept whatever default pmbootstrap shows for that prompt.
+          answers=(
+            ""          # 1.  Work path
+            ""          # 2.  pmaports path
+            ""          # 3.  Channel [edge]
+            "samsung"   # 4.  Vendor
+            "a10"       # 5.  Device codename
+            ""          # 6.  Username [user]
+            ""          # 7.  Audio backend provider
+            ""          # 8.  WiFi backend provider
+            ""          # 9.  usb-moded profile provider
+            ""          # 10. User interface [console]
+            ""          # 11. Service manager [openrc]
+            ""          # 12. Change additional options? (y/n) [n]
+            ""          # 13. Extra packages [none]
+            ""          # 14. Locale [en_US]
+            ""          # 15. Device hostname [samsung-a10]
+            ""          # 16. Build outdated packages? (y/n) [y]
+            ""          # 17. Zap existing chroots? (y/n) [y]
+          )
+          printf '%s\n' "${answers[@]}" > /tmp/init-answers.txt
+          echo "Prepared $(wc -l < /tmp/init-answers.txt) answer lines:"
+          cat -A /tmp/init-answers.txt
+          pmbootstrap --as-root init < /tmp/init-answers.txt
 
       - name: Verify config landed correctly
         run: |
