@@ -1,0 +1,30 @@
+# Reference: <https://nura.eco/devicepkg>
+maintainer=""
+pkgname=device-samsung-a10
+pkgver=1
+pkgrel=0
+pkgdesc="Samsung Galaxy A10"
+url="https://nura.eco"
+arch="aarch64"
+license="MIT"
+depends="
+	android-tools-mkbootimg
+	linux-CHANGEME
+	postmarketos-base
+	"
+makedepends="devicepkg-dev"
+source="
+	deviceinfo
+	modules-initfs
+	"
+options="!archcheck !check"
+
+build() {
+	devicepkg_build $startdir $pkgname
+}
+
+package() {
+	devicepkg_package $startdir $pkgname
+}
+
+sha512sums="(run 'pmbootstrap checksum device-samsung-a10' to fill)"
