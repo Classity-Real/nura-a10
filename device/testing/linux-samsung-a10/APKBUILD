@@ -3,7 +3,7 @@
 maintainer="Classity-Real <classity-real@users.noreply.github.com>"
 pkgname=linux-samsung-a10
 pkgver=6.15_rc1
-pkgrel=1
+pkgrel=2
 pkgdesc="Mainline-based kernel for Samsung Galaxy A10 (Exynos 7884B/7885)"
 arch="aarch64"
 _carch="arm64"
@@ -42,9 +42,15 @@ builddir="$srcdir/$_repo-$_commit"
 prepare() {
 	default_prepare
 	cp "$srcdir/$_config" .config
-	# Fix modpost ERROR: "wcslen" [fs/smb/client/cifs.ko] undefined
-	# by enabling the missing UNICODE support that CIFS expects
-	sed -i 's/# CONFIG_UNICODE is not set/CONFIG_UNICODE=y/' .config
+	# Permanently fix modpost ERROR: "wcslen" [fs/smb/client/cifs.ko] undefined
+	# by disabling CIFS/SMB which is not needed on this device
+	sed -i \
+		-e 's/^CONFIG_CIFS=m$/# CONFIG_CIFS is not set/' \
+		-e 's/^CONFIG_CIFS_STATS2=y$/# CONFIG_CIFS_STATS2 is not set/' \
+		-e 's/^CONFIG_CIFS_ALLOW_INSECURE_LEGACY=y$/# CONFIG_CIFS_ALLOW_INSECURE_LEGACY is not set/' \
+		-e 's/^CONFIG_CIFS_DEBUG=y$/# CONFIG_CIFS_DEBUG is not set/' \
+		-e 's/^CONFIG_SMBFS=m$/# CONFIG_SMBFS is not set/' \
+		.config
 	make ARCH="$_carch" LLVM=1 olddefconfig
 }
 
