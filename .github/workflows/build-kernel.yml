@@ -44,15 +44,15 @@ jobs:
           #   change additional options? (y/n)
           # Since device-samsung-a10 already exists on disk now, the
           # "start a new device port" sub-wizard should NOT trigger.
-          printf 'edge\nsamsung\na10\nuser\n\n\n\nn\n' | pmbootstrap init
+          printf 'edge\nsamsung\na10\nuser\n\n\n\nn\n' | pmbootstrap --as-root init
 
       - name: Verify config landed correctly
         run: |
-          pmbootstrap config
+          pmbootstrap --as-root config
 
       - name: Build kernel
         run: |
-          pmbootstrap build linux-samsung-a10
+          pmbootstrap --as-root build linux-samsung-a10
 
       - name: Collect artifacts
         if: always()
