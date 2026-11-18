@@ -19,21 +19,36 @@ jobs:
         run: |
           apk add --no-cache pmbootstrap git openssl sudo shadow
 
-      - name: Init pmbootstrap (non-interactive)
+      - name: Pre-stage pmaports with our device + kernel packages
         run: |
-          pmbootstrap init -y --device samsung-a10 --vendor samsung --ui console
+          # Clone pmaports ourselves first, into the path pmbootstrap expects,
+          # and drop our device package in BEFORE running init. This way the
+          # init wizard's device prompt finds "a10" immediately instead of
+          # offering to scaffold a brand new device port.
+          mkdir -p /root/.local/var/pmbootstrap/cache_git
+          git clone --depth 1 --branch main https://gitlab.postmarketos.org/postmarketOS/pmaports.git \
+            /root/.local/var/pmbootstrap/cache_git/pmaports \
+            || git clone --depth 1 https://gitlab.com/postmarketOS/pmaports.git \
+               /root/.local/var/pmbootstrap/cache_git/pmaports
 
-      - name: Drop in device + kernel packages
-        run: |
           cp -r "$GITHUB_WORKSPACE"/device/testing/device-samsung-a10 \
             /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
-          if [ -d "$GITHUB_WORKSPACE"/device/testing/linux-samsung-a10 ]; then
-            cp -r "$GITHUB_WORKSPACE"/device/testing/linux-samsung-a10 \
-              /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
-          else
-            echo "::error::device/testing/linux-samsung-a10 not found in repo - nothing to build yet"
-            exit 1
-          fi
+          cp -r "$GITHUB_WORKSPACE"/device/testing/linux-samsung-a10 \
+            /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
+
+      - name: Run pmbootstrap init with pre-staged device
+        run: |
+          # Known prompt order, confirmed by hand earlier in development:
+          #   pmaports branch -> vendor -> device codename -> username ->
+          #   audio backend -> wifi backend -> usb-moded profile ->
+          #   change additional options? (y/n)
+          # Since device-samsung-a10 already exists on disk now, the
+          # "start a new device port" sub-wizard should NOT trigger.
+          printf 'edge\nsamsung\na10\nuser\n\n\n\nn\n' | pmbootstrap init
+
+      - name: Verify config landed correctly
+        run: |
+          pmbootstrap config
 
       - name: Build kernel
         run: |
