@@ -1,0 +1,53 @@
+name: Build kernel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:edge
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pmbootstrap and deps
+        run: |
+          apk add --no-cache pmbootstrap git openssl sudo shadow
+
+      - name: Init pmbootstrap (non-interactive)
+        run: |
+          pmbootstrap init -y --device samsung-a10 --vendor samsung --ui console
+
+      - name: Drop in device + kernel packages
+        run: |
+          cp -r "$GITHUB_WORKSPACE"/device/testing/device-samsung-a10 \
+            /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
+          if [ -d "$GITHUB_WORKSPACE"/device/testing/linux-samsung-a10 ]; then
+            cp -r "$GITHUB_WORKSPACE"/device/testing/linux-samsung-a10 \
+              /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
+          else
+            echo "::error::device/testing/linux-samsung-a10 not found in repo - nothing to build yet"
+            exit 1
+          fi
+
+      - name: Build kernel
+        run: |
+          pmbootstrap build linux-samsung-a10
+
+      - name: Collect artifacts
+        if: always()
+        run: |
+          mkdir -p artifacts
+          find /root/.local/var/pmbootstrap/packages -name 'linux-samsung-a10-*.apk' -exec cp {} artifacts/ \; || true
+          cp /root/.local/var/pmbootstrap/log.txt artifacts/pmbootstrap-log.txt || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-samsung-a10-build
+          path: artifacts/
