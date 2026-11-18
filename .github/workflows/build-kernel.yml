@@ -17,7 +17,7 @@ jobs:
 
       - name: Install pmbootstrap and deps
         run: |
-          apk add --no-cache pmbootstrap git openssl sudo shadow
+          apk add --no-cache pmbootstrap git openssl sudo shadow bash
 
       - name: Pre-stage pmaports with our device + kernel packages
         run: |
@@ -37,6 +37,7 @@ jobs:
             /root/.local/var/pmbootstrap/cache_git/pmaports/device/testing/
 
       - name: Run pmbootstrap init with pre-staged device
+        shell: bash
         run: |
           # Built as a bash array, one element per prompt in exact order,
           # captured from a real local `pmbootstrap --as-root init` run
